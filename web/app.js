@@ -16,3 +16,28 @@ document.querySelectorAll('.card, .steps article, .proof-copy, .ledger').forEach
 window.addEventListener('pointermove', event => { document.documentElement.style.setProperty('--mx', `${event.clientX / window.innerWidth * 100}%`); document.documentElement.style.setProperty('--my', `${event.clientY / window.innerHeight * 100}%`); });
 const contractConfig = document.createElement('script'); contractConfig.src = 'contract-config.js'; document.head.append(contractConfig);
 const walletModule = document.createElement('script'); walletModule.type = 'module'; walletModule.src = 'wallet.js'; document.body.append(walletModule);
+const createForm = document.querySelector('#createDialog form');
+const createButton = document.querySelector('#createBounty');
+const originalCreate = createButton?.onclick;
+if (createButton && createForm) createButton.onclick = async event => {
+  event.preventDefault();
+  const fields = createForm.querySelectorAll('input');
+  const claim = fields[0]?.value.trim();
+  const evidenceUrl = fields[3]?.value.trim();
+  if (!claim || !/^https:\/\//i.test(evidenceUrl)) { window.alert('Add a claim and an HTTPS evidence URL.'); return; }
+  createButton.disabled = true; createButton.textContent = 'Signing + waiting for consensus…';
+  try {
+    const receipt = await window.proofloomCreateBounty(claim, evidenceUrl);
+    createForm.closest('dialog').close();
+    const toast = document.querySelector('#toast');
+    toast.textContent = `Bounty finalized on Bradbury · ${receipt?.transactionHash || 'view wallet activity'}`;
+    toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 6000);
+  } catch (error) { window.alert(error.message || 'Transaction failed.'); }
+  finally { createButton.disabled = false; createButton.innerHTML = 'Lock terms & create <b>↗</b>'; }
+};
+const livePanel = document.createElement('div');
+livePanel.className = 'live-panel'; livePanel.innerHTML = '<div><span class="index">ON-CHAIN LOOKUP</span><strong>Inspect a real bounty</strong><small>Read Bradbury state or trigger consensus verification.</small></div><div class="live-actions"><input id="bountyId" type="number" min="1" placeholder="Bounty #"/><button id="readBounty" class="ghost">Read state</button><button id="verifyBounty" class="primary">Verify evidence ↗</button></div><pre id="bountyResult">No lookup yet.</pre>';
+document.querySelector('.market-tools')?.after(livePanel);
+const bountyId = document.querySelector('#bountyId'); const bountyResult = document.querySelector('#bountyResult');
+document.querySelector('#readBounty')?.addEventListener('click', async () => { try { bountyResult.textContent = JSON.stringify(await window.proofloomReadBounty(bountyId.value), null, 2); } catch (error) { bountyResult.textContent = error.message; } });
+document.querySelector('#verifyBounty')?.addEventListener('click', async () => { try { bountyResult.textContent = 'Consensus transaction submitted…'; const receipt = await window.proofloomVerifyBounty(bountyId.value); bountyResult.textContent = `Finalized: ${receipt?.transactionHash || 'success'}`; } catch (error) { bountyResult.textContent = error.message; } });
