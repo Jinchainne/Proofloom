@@ -1,6 +1,7 @@
-# GenLayer runner: use the network's currently pinned py-genlayer image.
+# v0.3.0
+# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 """Proofloom GenLayer Intelligent Contract."""
-import genlayer as gl
+from genlayer import *
 
 
 class Proofloom(gl.Contract):
