@@ -7,6 +7,7 @@ Proofloom is a GenLayer-ready marketplace where teams lock a reward behind a pub
 - A polished, responsive static dashboard in `web/` — no build step or dependencies.
 - A GenLayer Intelligent Contract in `contracts/proofloom.py` using `gl.nondet.web.render`, `gl.nondet.exec_prompt`, and `gl.eq_principle.strict_eq`.
 - A browser-wallet client in `web/wallet.js` using GenLayerJS `readContract`, fee estimation, `writeContract`, and finalization tracking.
+- Bradbury deployment details in `docs/DEPLOYMENT.md`.
 - Architecture and security decisions in `docs/ARCHITECTURE.md`.
 
 ## Run the demo
