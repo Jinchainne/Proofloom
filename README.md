@@ -1,6 +1,6 @@
-# Verdicta — proof-powered public outcomes
+# Proofloom — proof-powered public outcomes
 
-Verdicta is a GenLayer-ready marketplace where teams lock a reward behind a public claim, contributors submit verifiable evidence, and validator consensus settles the result. It combines the strongest patterns from Verda, Triggera, ProofBounty, and the GenLayer Incident Response Playbook.
+Proofloom is a GenLayer-ready marketplace where teams lock a reward behind a public claim, contributors submit verifiable evidence, and validator consensus settles the result. It combines the strongest patterns from Verda, Triggera, ProofBounty, and the GenLayer Incident Response Playbook.
 
 ## Included
 
