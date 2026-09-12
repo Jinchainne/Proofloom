@@ -14,6 +14,11 @@ document.querySelectorAll('.brand').forEach(brand => { brand.lastChild.textConte
 const revealObserver = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('is-visible'); }), { threshold: .15 });
 document.querySelectorAll('.card, .steps article, .proof-copy, .ledger').forEach((el, i) => { el.style.setProperty('--delay', `${i * 70}ms`); revealObserver.observe(el); });
 window.addEventListener('pointermove', event => { document.documentElement.style.setProperty('--mx', `${event.clientX / window.innerWidth * 100}%`); document.documentElement.style.setProperty('--my', `${event.clientY / window.innerHeight * 100}%`); });
+const nav = document.querySelector('nav');
+const sectionLinks = [...document.querySelectorAll('.navlinks a[href^="#"]')];
+window.addEventListener('scroll', () => { nav?.classList.toggle('is-scrolled', window.scrollY > 24); }, { passive: true });
+const sectionObserver = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) sectionLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${entry.target.id}`)); }), { rootMargin: '-35% 0px -55% 0px' });
+document.querySelectorAll('main section[id]').forEach(section => sectionObserver.observe(section));
 const contractConfig = document.createElement('script'); contractConfig.src = 'contract-config.js'; document.head.append(contractConfig);
 const walletModule = document.createElement('script'); walletModule.type = 'module'; walletModule.src = 'wallet.js'; document.body.append(walletModule);
 const createForm = document.querySelector('#createDialog form');
