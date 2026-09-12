@@ -33,6 +33,7 @@ if (createButton && createForm) createButton.onclick = async event => {
   createButton.disabled = true; createButton.textContent = 'Signing + waiting for consensus…';
   try {
     const receipt = await window.proofloomCreateBounty(claim, evidenceUrl);
+    const history = JSON.parse(localStorage.getItem('proofloom_activity') || '[]'); history.unshift({ claim, evidenceUrl, tx: receipt?.transactionHash || '', at: new Date().toISOString() }); localStorage.setItem('proofloom_activity', JSON.stringify(history.slice(0, 20)));
     createForm.closest('dialog').close();
     const toast = document.querySelector('#toast');
     toast.textContent = `Bounty finalized on Bradbury · ${receipt?.transactionHash || 'view wallet activity'}`;
@@ -46,3 +47,8 @@ document.querySelector('.market-tools')?.after(livePanel);
 const bountyId = document.querySelector('#bountyId'); const bountyResult = document.querySelector('#bountyResult');
 document.querySelector('#readBounty')?.addEventListener('click', async () => { try { bountyResult.textContent = JSON.stringify(await window.proofloomReadBounty(bountyId.value), null, 2); } catch (error) { bountyResult.textContent = error.message; } });
 document.querySelector('#verifyBounty')?.addEventListener('click', async () => { try { bountyResult.textContent = 'Consensus transaction submitted…'; const receipt = await window.proofloomVerifyBounty(bountyId.value); bountyResult.textContent = `Finalized: ${receipt?.transactionHash || 'success'}`; } catch (error) { bountyResult.textContent = error.message; } });
+const statsBar = document.createElement('section'); statsBar.className = 'stats-bar'; statsBar.innerHTML = '<div><span>NETWORK</span><strong><i></i> BRADBURY 4221</strong></div><div><span>CONTRACT</span><strong>0x503E…D83b</strong></div><div><span>ON-CHAIN BOUNTIES</span><strong id="liveTotal">—</strong></div><div><span>APPROVED</span><strong id="liveApproved">—</strong></div><button class="ghost" id="refreshStats">Refresh ↻</button>';
+document.querySelector('.hero')?.after(statsBar);
+async function refreshLiveStats() { const total = document.querySelector('#liveTotal'); const approved = document.querySelector('#liveApproved'); try { const data = await window.proofloomGetStats(); total.textContent = data.total ?? data[0] ?? '0'; approved.textContent = data.approved ?? data[1] ?? '0'; statsBar.classList.add('loaded'); } catch { total.textContent = 'Connect'; approved.textContent = 'wallet'; } }
+document.querySelector('#refreshStats')?.addEventListener('click', refreshLiveStats);
+setTimeout(refreshLiveStats, 900);
