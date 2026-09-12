@@ -1,0 +1,24 @@
+name: Proofloom CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile contract
+        run: python -m py_compile contracts/verdicta.py
+      - name: Run contract regression tests
+        run: python -m unittest discover -s tests -v
+      - name: Check frontend JavaScript
+        run: node --check web/app.js
+      - name: Check required static assets
+        run: test -f web/index.html && test -f web/styles.css && test -f web/app.js
