@@ -5,7 +5,8 @@ Proofloom is a GenLayer-ready marketplace where teams lock a reward behind a pub
 ## Included
 
 - A polished, responsive static dashboard in `web/` — no build step or dependencies.
-- A GenLayer Intelligent Contract blueprint in `contracts/verdicta.py`.
+- A GenLayer Intelligent Contract in `contracts/proofloom.py` using `gl.nondet.web.render`, `gl.nondet.exec_prompt`, and `gl.eq_principle.strict_eq`.
+- A browser-wallet client in `web/wallet.js` using GenLayerJS `readContract`, fee estimation, `writeContract`, and finalization tracking.
 - Architecture and security decisions in `docs/ARCHITECTURE.md`.
 
 ## Run the demo
@@ -27,4 +28,4 @@ Open `http://localhost:4173`. The demo includes live filtering, a creation dialo
 
 ## Status
 
-The frontend is a production-quality interaction prototype. The contract is a deliberately compact implementation blueprint; validate it against the pinned GenVM version and add integration tests before a real deployment.
+The contract is ready for GenVM linting and Studio deployment. Set the deployed address in `web/contract-config.js`, then connect a wallet on chain 61997 to create and read bounties. Run the CI suite before deployment.

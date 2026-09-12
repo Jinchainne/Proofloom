@@ -14,3 +14,5 @@ document.querySelectorAll('.brand').forEach(brand => { brand.lastChild.textConte
 const revealObserver = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('is-visible'); }), { threshold: .15 });
 document.querySelectorAll('.card, .steps article, .proof-copy, .ledger').forEach((el, i) => { el.style.setProperty('--delay', `${i * 70}ms`); revealObserver.observe(el); });
 window.addEventListener('pointermove', event => { document.documentElement.style.setProperty('--mx', `${event.clientX / window.innerWidth * 100}%`); document.documentElement.style.setProperty('--my', `${event.clientY / window.innerHeight * 100}%`); });
+const contractConfig = document.createElement('script'); contractConfig.src = 'contract-config.js'; document.head.append(contractConfig);
+const walletModule = document.createElement('script'); walletModule.type = 'module'; walletModule.src = 'wallet.js'; document.body.append(walletModule);

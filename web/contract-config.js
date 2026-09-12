@@ -1,0 +1,1 @@
+window.PROOFLOOM_CONTRACT_ADDRESS = '';
