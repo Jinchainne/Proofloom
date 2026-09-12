@@ -1,19 +1,19 @@
-# { "Depends": "py-genlayer:1jb45aa8yn2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+# GenLayer runner: use the network's currently pinned py-genlayer image.
 """Proofloom GenLayer Intelligent Contract."""
 import genlayer as gl
 
 
 class Proofloom(gl.Contract):
-    next_bounty_id: int
-    bounty_claim: dict[int, str]
-    bounty_evidence: dict[int, str]
-    bounty_status: dict[int, str]
+    next_bounty_id: u256
+    bounty_claim: TreeMap[u256, str]
+    bounty_evidence: TreeMap[u256, str]
+    bounty_status: TreeMap[u256, str]
 
     def __init__(self):
         self.next_bounty_id = 1
-        self.bounty_claim = {}
-        self.bounty_evidence = {}
-        self.bounty_status = {}
+        self.bounty_claim = TreeMap()
+        self.bounty_evidence = TreeMap()
+        self.bounty_status = TreeMap()
 
     @gl.public.write
     def create_bounty(self, claim: str, evidence_url: str) -> int:
