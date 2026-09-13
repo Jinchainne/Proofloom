@@ -16,10 +16,23 @@ async function waitForSuccessfulTransaction(client, hash, isSuccessful) {
   }
   return { ...transaction, hash };
 }
+async function submitWrite(client, write) {
+  // Bradbury deployments without a FeeManager use the chain's fee-less path.
+  // Fee estimation is attempted only when the chain exposes the fee manager.
+  try {
+    if (typeof client.estimateTransactionFeesForWrite === 'function' && client.chain?.contracts?.feeManagerContract) {
+      const estimate = await client.estimateTransactionFeesForWrite(write);
+      return client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } });
+    }
+  } catch (error) {
+    if (!/fee(manager)?|unsupported|not supported/i.test(String(error?.message || error))) throw error;
+  }
+  return client.writeContract(write);
+}
 window.proofloomReadBounty = async id => { const { client } = await genlayerClient(); return client.readContract({ address: CONTRACT_ADDRESS, functionName: 'get_bounty', args: [Number(id)] }); };
 window.proofloomGetStats = async () => { const { client } = await genlayerClient(); return client.readContract({ address: CONTRACT_ADDRESS, functionName: 'get_stats', args: [] }); };
-window.proofloomCreateBounty = async (claim, evidenceUrl) => { const { client, isSuccessful } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'create_bounty', args: [claim, evidenceUrl] }; const estimate = await client.estimateTransactionFeesForWrite(write); const hash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }); return waitForSuccessfulTransaction(client, hash, isSuccessful); };
-window.proofloomVerifyBounty = async id => { const { client, isSuccessful } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'verify_bounty', args: [Number(id)] }; const estimate = await client.estimateTransactionFeesForWrite(write); const hash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }); return waitForSuccessfulTransaction(client, hash, isSuccessful); };
+window.proofloomCreateBounty = async (claim, evidenceUrl) => { const { client, isSuccessful } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'create_bounty', args: [claim, evidenceUrl] }; const hash = await submitWrite(client, write); return waitForSuccessfulTransaction(client, hash, isSuccessful); };
+window.proofloomVerifyBounty = async id => { const { client, isSuccessful } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'verify_bounty', args: [Number(id)] }; const hash = await submitWrite(client, write); return waitForSuccessfulTransaction(client, hash, isSuccessful); };
 walletButton()?.addEventListener('click', async () => { try { await connectProofloomWallet(); } catch (error) { window.alert(error.message); } });
 if (window.ethereum) {
   window.ethereum.on?.('accountsChanged', accounts => setWallet(accounts?.[0] || ''));
