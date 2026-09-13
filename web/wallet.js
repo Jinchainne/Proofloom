@@ -20,7 +20,12 @@ async function submitWrite(client, write) {
   // The provider-backed client already owns the connected wallet account.
   // Passing the bare address again is interpreted as an account object by
   // viem and produces "Address undefined is invalid".
-  return client.writeContract({ ...write, value: 0n });
+  return client.writeContract({
+    ...write,
+    value: 0n,
+    consensusMaxRotations: 1,
+    validUntil: BigInt(Math.floor(Date.now() / 1000) + 3600),
+  });
 }
 function bountyArg(id) { if (id === undefined || id === null || String(id).trim() === '' || !/^\d+$/.test(String(id).trim())) throw new Error('Enter a valid bounty number first.'); return BigInt(String(id).trim()); }
 window.proofloomReadBounty = async id => { const { client } = await genlayerClient(); return client.readContract({ address: CONTRACT_ADDRESS, functionName: 'get_bounty', args: [bountyArg(id)] }); };
