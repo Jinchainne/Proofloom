@@ -29,10 +29,11 @@ async function submitWrite(client, write) {
   }
   return client.writeContract(write);
 }
-window.proofloomReadBounty = async id => { const { client } = await genlayerClient(); return client.readContract({ address: CONTRACT_ADDRESS, functionName: 'get_bounty', args: [Number(id)] }); };
+function bountyArg(id) { if (id === undefined || id === null || String(id).trim() === '' || !/^\d+$/.test(String(id).trim())) throw new Error('Enter a valid bounty number first.'); return BigInt(String(id).trim()); }
+window.proofloomReadBounty = async id => { const { client } = await genlayerClient(); return client.readContract({ address: CONTRACT_ADDRESS, functionName: 'get_bounty', args: [bountyArg(id)] }); };
 window.proofloomGetStats = async () => { const { client } = await genlayerClient(); return client.readContract({ address: CONTRACT_ADDRESS, functionName: 'get_stats', args: [] }); };
 window.proofloomCreateBounty = async (claim, evidenceUrl) => { const { client, isSuccessful } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'create_bounty', args: [claim, evidenceUrl] }; const hash = await submitWrite(client, write); return waitForSuccessfulTransaction(client, hash, isSuccessful); };
-window.proofloomVerifyBounty = async id => { const { client, isSuccessful } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'verify_bounty', args: [Number(id)] }; const hash = await submitWrite(client, write); return waitForSuccessfulTransaction(client, hash, isSuccessful); };
+window.proofloomVerifyBounty = async id => { const { client, isSuccessful } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'verify_bounty', args: [bountyArg(id)] }; const hash = await submitWrite(client, write); return waitForSuccessfulTransaction(client, hash, isSuccessful); };
 walletButton()?.addEventListener('click', async () => { try { await connectProofloomWallet(); } catch (error) { window.alert(error.message); } });
 if (window.ethereum) {
   window.ethereum.on?.('accountsChanged', accounts => setWallet(accounts?.[0] || ''));
