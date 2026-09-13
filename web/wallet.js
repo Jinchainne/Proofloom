@@ -4,11 +4,22 @@ const RPC_CHAIN = { id: CHAIN_ID, name: 'GenLayer Bradbury Testnet', network: 'g
 function walletButton() { return document.querySelector('.wallet'); }
 function setWallet(address) { if (walletButton()) walletButton().textContent = address ? `◉  ${address.slice(0, 6)}...${address.slice(-4)}` : '◉  Connect wallet'; }
 async function connectProofloomWallet() { if (!window.ethereum) throw new Error('Install MetaMask or another EIP-1193 wallet first.'); const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }); const address = accounts[0]; const chain = await window.ethereum.request({ method: 'eth_chainId' }); if (parseInt(chain, 16) !== CHAIN_ID) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: `0x${CHAIN_ID.toString(16)}`, chainName: RPC_CHAIN.name, nativeCurrency: RPC_CHAIN.nativeCurrency, rpcUrls: RPC_CHAIN.rpcUrls.default.http }] }); setWallet(address); return address; }
-async function genlayerClient() { if (!CONTRACT_ADDRESS) throw new Error('Configure PROOFLOOM_CONTRACT_ADDRESS after deploying the contract.'); const { createClient } = await import('https://esm.sh/genlayer-js@latest'); const account = await connectProofloomWallet(); const client = createClient({ chain: RPC_CHAIN, account, provider: window.ethereum }); await client.connect('testnetBradbury'); return { client, account }; }
+async function genlayerClient() { if (!CONTRACT_ADDRESS) throw new Error('Configure PROOFLOOM_CONTRACT_ADDRESS after deploying the contract.'); const sdk = await import('https://esm.sh/genlayer-js@latest'); const account = await connectProofloomWallet(); const client = sdk.createClient({ chain: RPC_CHAIN, account, provider: window.ethereum }); await client.connect('testnetBradbury'); return { client, account, isSuccessful: sdk.isSuccessful }; }
+async function waitForSuccessfulTransaction(client, hash, isSuccessful) {
+  const transaction = await client.waitForFinalization({ hash });
+  const successful = typeof isSuccessful === 'function'
+    ? await isSuccessful(transaction)
+    : transaction?.status === 'ACCEPTED' || transaction?.status === 'FINALIZED' || transaction?.txStatus === 'ACCEPTED';
+  if (!successful) {
+    const reason = transaction?.txExecutionResultName || transaction?.status || 'unknown execution result';
+    throw new Error(`GenLayer transaction was finalized but not successful (${reason}). Hash: ${hash}`);
+  }
+  return { ...transaction, hash };
+}
 window.proofloomReadBounty = async id => { const { client } = await genlayerClient(); return client.readContract({ address: CONTRACT_ADDRESS, functionName: 'get_bounty', args: [Number(id)] }); };
 window.proofloomGetStats = async () => { const { client } = await genlayerClient(); return client.readContract({ address: CONTRACT_ADDRESS, functionName: 'get_stats', args: [] }); };
-window.proofloomCreateBounty = async (claim, evidenceUrl) => { const { client } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'create_bounty', args: [claim, evidenceUrl] }; const estimate = await client.estimateTransactionFeesForWrite(write); const hash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }); return client.waitForFinalization({ hash }); };
-window.proofloomVerifyBounty = async id => { const { client } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'verify_bounty', args: [Number(id)] }; const estimate = await client.estimateTransactionFeesForWrite(write); const hash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }); return client.waitForFinalization({ hash }); };
+window.proofloomCreateBounty = async (claim, evidenceUrl) => { const { client, isSuccessful } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'create_bounty', args: [claim, evidenceUrl] }; const estimate = await client.estimateTransactionFeesForWrite(write); const hash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }); return waitForSuccessfulTransaction(client, hash, isSuccessful); };
+window.proofloomVerifyBounty = async id => { const { client, isSuccessful } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'verify_bounty', args: [Number(id)] }; const estimate = await client.estimateTransactionFeesForWrite(write); const hash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }); return waitForSuccessfulTransaction(client, hash, isSuccessful); };
 walletButton()?.addEventListener('click', async () => { try { await connectProofloomWallet(); } catch (error) { window.alert(error.message); } });
 if (window.ethereum) {
   window.ethereum.on?.('accountsChanged', accounts => setWallet(accounts?.[0] || ''));

@@ -15,10 +15,10 @@ jobs:
         with:
           python-version: '3.12'
       - name: Compile contract
-        run: python -m py_compile contracts/verdicta.py
+        run: python -m py_compile contracts/proofloom.py contracts/verdicta.py
       - name: Run contract regression tests
         run: python -m unittest discover -s tests -v
       - name: Check frontend JavaScript
-        run: node --check web/app.js
+        run: node --check web/app.js && node --check web/wallet.js
       - name: Check required static assets
         run: test -f web/index.html && test -f web/styles.css && test -f web/app.js
