@@ -27,7 +27,9 @@ async function submitWrite(client, write) {
   } catch (error) {
     if (!/fee(manager)?|unsupported|not supported/i.test(String(error?.message || error))) throw error;
   }
-  return client.writeContract(write);
+  // Fee-less Bradbury still expects an explicit zero fee envelope in the
+  // stable SDK; omitting it makes the encoder call BigInt(undefined).
+  return client.writeContract({ ...write, fees: { distribution: [], feeValue: 0n } });
 }
 function bountyArg(id) { if (id === undefined || id === null || String(id).trim() === '' || !/^\d+$/.test(String(id).trim())) throw new Error('Enter a valid bounty number first.'); return BigInt(String(id).trim()); }
 window.proofloomReadBounty = async id => { const { client } = await genlayerClient(); return client.readContract({ address: CONTRACT_ADDRESS, functionName: 'get_bounty', args: [bountyArg(id)] }); };
