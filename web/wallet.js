@@ -23,6 +23,7 @@ async function submitWrite(client, write) {
   return client.writeContract({
     ...write,
     value: 0n,
+    leaderOnly: true,
     consensusMaxRotations: 1,
     validUntil: BigInt(Math.floor(Date.now() / 1000) + 3600),
   });
