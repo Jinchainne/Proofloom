@@ -10,3 +10,8 @@ window.proofloomGetStats = async () => { const { client } = await genlayerClient
 window.proofloomCreateBounty = async (claim, evidenceUrl) => { const { client } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'create_bounty', args: [claim, evidenceUrl] }; const estimate = await client.estimateTransactionFeesForWrite(write); const hash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }); return client.waitForFinalization({ hash }); };
 window.proofloomVerifyBounty = async id => { const { client } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'verify_bounty', args: [Number(id)] }; const estimate = await client.estimateTransactionFeesForWrite(write); const hash = await client.writeContract({ ...write, fees: { distribution: estimate.distribution, feeValue: estimate.feeValue } }); return client.waitForFinalization({ hash }); };
 walletButton()?.addEventListener('click', async () => { try { await connectProofloomWallet(); } catch (error) { window.alert(error.message); } });
+if (window.ethereum) {
+  window.ethereum.on?.('accountsChanged', accounts => setWallet(accounts?.[0] || ''));
+  window.ethereum.on?.('chainChanged', () => { setWallet(''); window.location.reload(); });
+  window.ethereum.request({ method: 'eth_accounts' }).then(accounts => { if (accounts?.[0]) setWallet(accounts[0]); }).catch(() => {});
+}

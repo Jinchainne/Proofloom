@@ -36,7 +36,8 @@ if (createButton && createForm) createButton.onclick = async event => {
     const history = JSON.parse(localStorage.getItem('proofloom_activity') || '[]'); history.unshift({ claim, evidenceUrl, tx: receipt?.transactionHash || '', at: new Date().toISOString() }); localStorage.setItem('proofloom_activity', JSON.stringify(history.slice(0, 20)));
     createForm.closest('dialog').close();
     const toast = document.querySelector('#toast');
-    toast.textContent = `Bounty finalized on Bradbury · ${receipt?.transactionHash || 'view wallet activity'}`;
+    const txHash = receipt?.transactionHash || receipt?.hash || '';
+    toast.innerHTML = txHash ? `Bounty finalized on Bradbury · <a href="https://explorer-bradbury.genlayer.com/tx/${txHash}" target="_blank" rel="noreferrer">view transaction ↗</a>` : 'Bounty finalized on Bradbury.';
     toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 6000);
   } catch (error) { window.alert(error.message || 'Transaction failed.'); }
   finally { createButton.disabled = false; createButton.innerHTML = 'Lock terms & create <b>↗</b>'; }
@@ -52,3 +53,7 @@ document.querySelector('.hero')?.after(statsBar);
 async function refreshLiveStats() { const total = document.querySelector('#liveTotal'); const approved = document.querySelector('#liveApproved'); try { const data = await window.proofloomGetStats(); total.textContent = data.total ?? data[0] ?? '0'; approved.textContent = data.approved ?? data[1] ?? '0'; statsBar.classList.add('loaded'); } catch { total.textContent = 'Connect'; approved.textContent = 'wallet'; } }
 document.querySelector('#refreshStats')?.addEventListener('click', refreshLiveStats);
 setTimeout(refreshLiveStats, 900);
+const activity = document.createElement('section'); activity.className = 'activity-panel'; activity.innerHTML = '<div class="activity-head"><div><span class="index">LOCAL ACTIVITY</span><strong>Your submitted proofs</strong></div><button class="ghost" id="clearActivity">Clear</button></div><div id="activityRows"></div>';
+document.querySelector('#proof')?.before(activity);
+function renderActivity() { const rows = document.querySelector('#activityRows'); const items = JSON.parse(localStorage.getItem('proofloom_activity') || '[]'); rows.innerHTML = items.length ? items.map(item => `<div class="activity-row"><span>${new Date(item.at).toLocaleString()}</span><b>${item.claim.slice(0, 72)}${item.claim.length > 72 ? '…' : ''}</b><a href="${item.tx ? `https://explorer-bradbury.genlayer.com/tx/${item.tx}` : '#'}" target="_blank" rel="noreferrer">${item.tx ? 'TX ↗' : 'Pending'}</a></div>`).join('') : '<p class="activity-empty">No local submissions yet. Create your first bounty above.</p>'; }
+document.querySelector('#clearActivity')?.addEventListener('click', () => { localStorage.removeItem('proofloom_activity'); renderActivity(); }); renderActivity();
