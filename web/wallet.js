@@ -16,16 +16,17 @@ async function waitForSuccessfulTransaction(client, hash, isSuccessful) {
   }
   return { ...transaction, hash };
 }
-async function submitWrite(client, write, account) {
-  // Bradbury's browser-wallet path is fee-less. Pass the account and value
-  // explicitly; omitting either makes older SDK encoders call BigInt(undefined).
-  return client.writeContract({ ...write, account, value: 0n });
+async function submitWrite(client, write) {
+  // The provider-backed client already owns the connected wallet account.
+  // Passing the bare address again is interpreted as an account object by
+  // viem and produces "Address undefined is invalid".
+  return client.writeContract({ ...write, value: 0n });
 }
 function bountyArg(id) { if (id === undefined || id === null || String(id).trim() === '' || !/^\d+$/.test(String(id).trim())) throw new Error('Enter a valid bounty number first.'); return BigInt(String(id).trim()); }
 window.proofloomReadBounty = async id => { const { client } = await genlayerClient(); return client.readContract({ address: CONTRACT_ADDRESS, functionName: 'get_bounty', args: [bountyArg(id)] }); };
 window.proofloomGetStats = async () => { const { client } = await genlayerClient(); return client.readContract({ address: CONTRACT_ADDRESS, functionName: 'get_stats', args: [] }); };
-window.proofloomCreateBounty = async (claim, evidenceUrl) => { const { client, account, isSuccessful } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'create_bounty', args: [claim, evidenceUrl] }; const hash = await submitWrite(client, write, account); return waitForSuccessfulTransaction(client, hash, isSuccessful); };
-window.proofloomVerifyBounty = async id => { const { client, account, isSuccessful } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'verify_bounty', args: [bountyArg(id)] }; const hash = await submitWrite(client, write, account); return waitForSuccessfulTransaction(client, hash, isSuccessful); };
+window.proofloomCreateBounty = async (claim, evidenceUrl) => { const { client, isSuccessful } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'create_bounty', args: [claim, evidenceUrl] }; const hash = await submitWrite(client, write); return waitForSuccessfulTransaction(client, hash, isSuccessful); };
+window.proofloomVerifyBounty = async id => { const { client, isSuccessful } = await genlayerClient(); const write = { address: CONTRACT_ADDRESS, functionName: 'verify_bounty', args: [bountyArg(id)] }; const hash = await submitWrite(client, write); return waitForSuccessfulTransaction(client, hash, isSuccessful); };
 walletButton()?.addEventListener('click', async () => { try { await connectProofloomWallet(); } catch (error) { window.alert(error.message); } });
 if (window.ethereum) {
   window.ethereum.on?.('accountsChanged', accounts => setWallet(accounts?.[0] || ''));
